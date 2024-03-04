@@ -28,7 +28,7 @@
 
 ## :page_facing_up:Introduction
 
-This project is an back end template for authentication which in codeIgniter 4  to allow user to perform the basic actions of an authentication system.
+This project is an back end template for authentication in codeIgniter 4 to allow user to perform the basic actions of an authentication system.
 
 I am using [Insomnia](https://insomnia.rest/download) software to simulate our client.
 </div>
