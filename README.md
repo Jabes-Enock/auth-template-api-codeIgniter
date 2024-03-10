@@ -345,16 +345,15 @@ And now if I try to get the profile user data I get an error
 
 ````
 {
-	"email": "",
-	"confirm_email": "newjabes@example.com"
+	"username": "jabes enock",
+	"confirm_username": "jabes enock"
 }
 ````
 ![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=200&color=GREEN&style=for-the-badge)
 
 ````
 {
-	"email": "The email field is required.",
-	"confirm_email": "The confirm_email field does not match the email field."
+	"username": "The username field must contain a unique value."
 }
 ````
 <br/><br/>
