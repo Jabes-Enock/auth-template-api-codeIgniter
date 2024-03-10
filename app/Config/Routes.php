@@ -20,5 +20,6 @@ $routes->group(
         $routes->get("logout", "AuthController::logout", ["filter" => "authByToken"]);
         $routes->get("invalid-access", "AuthController::accessDenied");
 
+        $routes->post("set-email/(:num)", "AuthController::setEmail/$1", ["filter" => "authByToken"]);
     }
 );

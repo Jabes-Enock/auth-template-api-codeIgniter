@@ -22,31 +22,30 @@ class AuthController extends ResourceController
     public function register()
     {
         try {
-            $rules = [
-                "username" => [
-                    "label" => "username",
-                    "rules" => "required|is_unique[users.username]"
-                ],
-                "email" => [
-                    "label" => "email",
-                    "rules" => "required|valid_email|is_unique[auth_identities.secret]"
-                ],
-                "password" => [
-                    "label" => "password",
-                    "rules" => "required|min_length[5]|max_length[15]"
-                ],
+            $username = $this->request->getJsonVar('username');
+            $email = $this->request->getJsonVar('email');
+            $password = $this->request->getJsonVar('password');
+
+            $user = [
+                "username" => $username,
+                "email" => $email,
+                "password" => $password
             ];
 
-            if (!$this->validate($rules)) {
+            $rules = [
+                "username" => 'required|is_unique[users.username]',
+                "email" => 'required|valid_email|is_unique[auth_identities.secret]',
+                "password" => 'required|min_length[5]|max_length[15]',
+            ];
+
+            if (!$this->validateData($user, $rules)) {
                 return $this->respond($this->validator->getErrors());
             }
 
-            $user = $this->request->getJSON();
-
             $userEntity = new User([
-                "username" => $user->username,
-                "email" => $user->email,
-                "password" => $user->password,
+                "username" => $username,
+                "email" => $email,
+                "password" => $password,
             ]);
 
             if ($this->model->save($userEntity)) {
@@ -59,10 +58,6 @@ class AuthController extends ResourceController
 
             return $this->failServerError("Não foi possivel se conectar ao servidor.");
         }
-
-        /*  $data = ["route" => "register"];
-
-         return $this->respond($data); */
     }
 
     /**
@@ -144,6 +139,11 @@ class AuthController extends ResourceController
         }
     }
 
+    /**
+     * Return the editable properties of a resource object
+     *
+     * @return ResponseInterface
+     */
     public function logout()
     {
         auth()->logout();
@@ -152,22 +152,56 @@ class AuthController extends ResourceController
         return $this->respondCreated();
     }
 
-
-
-    /**
-     * Return the editable properties of a resource object
-     *
-     * @return ResponseInterface
-     */
-
     /**
      * Add or update a model resource, from "posted" properties
      *
      * @return ResponseInterface
      */
-    public function update($id = null)
+    public function setEmail($id)
     {
-        //
+        try {
+            $email = $this->request->getJsonVar('email');
+            $confirm_email = $this->request->getJsonVar('confirm_email');
+
+            $user = [
+                "email" => $email,
+                "confirm_email" => $confirm_email,
+            ];
+
+            $rules = [
+                "email" => 'required|valid_email',
+                "confirm_email" => 'required|matches[email]|valid_email'
+            ];
+
+            if (!$this->validateData($user, $rules)) {
+                return $this->respond($this->validator->getErrors());
+            }
+
+            $users = auth()->getProvider();
+
+            $user = $users->findById($id);
+
+            if (!$user) {
+                return $this->failNotFound();
+            }
+
+            if ($user->getEmail() === $email) {
+                return $this->failValidationError();
+            }
+
+            $user->fill([
+                'email' => $email,
+            ]);
+
+            if ($users->save($user)) {
+                return $this->respondCreated();
+            }
+
+            return $this->respond(["message" => "Something goes wrong."]);
+
+        } catch (\Exception $e) {
+            return $this->failServerError("Não foi possivel se conectar ao servidor.");
+        }
     }
 
     /**
@@ -180,6 +214,8 @@ class AuthController extends ResourceController
         //
     }
 
+
+
     /**
      * Delete the designated resource object from the model
      *
@@ -189,5 +225,6 @@ class AuthController extends ResourceController
     {
         return $this->failUnauthorized();
     }
+
 
 }

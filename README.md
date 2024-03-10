@@ -16,6 +16,7 @@
     - [Login ](#login)
     - [Profile ](#profile)
     - [Logout ](#logout)
+    - [update email](#update-email)
 - [Technologies](#Technologies)
 - [Installation](#Installation)
 - [My opinion about this project](#opinion)
@@ -242,6 +243,63 @@ And now if I try to get the profile user data I get an error
 </center>
 <br/><br/>
 
+<div id="update-email">
+
+### Update email
+
+<center>
+<img src="github/update_email.gif" style="width: 100%; margin: auto;">
+</center>
+
+<h4>Information</h4>
+
+| Property  |  Description
+|--- |--- 
+| Endpoint | /auth/set-email/:user_id
+| Method | POST
+| Header | Authorization 
+| JSON body | email \| confirm_email
+
+<br>
+
+<h4>Valid data</h4>
+
+``App\Controllers\Api\Auth\AuthController`` in ``setEmail`` method and in the``$rules`` variable.
+
+| Property  |  rules
+|--- |--- 
+| email | required \| valid_email 
+| confirm_email | required \| valid_email \| matches[email] 
+
+<br>
+<p>Successfully response.</p>
+
+![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=201|created&color=GREEN&style=for-the-badge)
+
+
+<br>
+<p>Some  example errors messages:</p>
+
+``Payload``
+
+````
+{
+	"email": "",
+	"confirm_email": "newjabes@example.com"
+}
+````
+![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=200&color=GREEN&style=for-the-badge)
+
+````
+{
+	"email": "The email field is required.",
+	"confirm_email": "The confirm_email field does not match the email field."
+}
+````
+<br/><br/>
+
+</div>
+
 
 <div id="Technologies">
 
@@ -327,8 +385,8 @@ I developed an auth template for frontend that consuming this API | [Auth System
 
 ## :white_check_mark: To do 
 - :black_square_button: update user info like:
+    - :white_check_mark:email 
     - username 
-    - email 
     - password
 
 - :black_square_button: delete user
