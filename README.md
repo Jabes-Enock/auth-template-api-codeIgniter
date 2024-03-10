@@ -17,6 +17,7 @@
     - [Profile ](#profile)
     - [Logout ](#logout)
     - [update email](#update-email)
+    - [update username](#update-username)
 - [Technologies](#Technologies)
 - [Installation](#Installation)
 - [My opinion about this project](#opinion)
@@ -32,6 +33,9 @@
 This project is an back end template for authentication in codeIgniter 4 to allow user to perform the basic actions of an authentication system.
 
 I am using [Insomnia](https://insomnia.rest/download) software to simulate our client.
+
+The ``base_url`` displayed in the following gifs is ``http://localhost:8080/api``
+
 </div>
 
 
@@ -66,7 +70,7 @@ This rules is set in ``App\Controllers\Api\Auth\AuthController`` in ``register``
 
 | Property  |  rules
 |--- |--- 
-| username | required \| unique
+| username | required \| unique \| max_length[30] \| min_length[3]
 | email | required \| valid_email \| unique
 | password | required  \| min_length[5] \| max_length[15]
 
@@ -241,9 +245,9 @@ And now if I try to get the profile user data I get an error
 <center>
 <img src="github/invalid_token_profile_endpoint.gif" style="width: 100%; margin: auto;">
 </center>
-<br/><br/>
 
 <div id="update-email">
+<br/><br/>
 
 ### Update email
 
@@ -270,6 +274,63 @@ And now if I try to get the profile user data I get an error
 |--- |--- 
 | email | required \| valid_email 
 | confirm_email | required \| valid_email \| matches[email] 
+
+<br>
+<p>Successfully response.</p>
+
+![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=201|created&color=GREEN&style=for-the-badge)
+
+
+<br>
+<p>Some  example errors messages:</p>
+
+``Payload``
+
+````
+{
+	"email": "",
+	"confirm_email": "newjabes@example.com"
+}
+````
+![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=200&color=GREEN&style=for-the-badge)
+
+````
+{
+	"email": "The email field is required.",
+	"confirm_email": "The confirm_email field does not match the email field."
+}
+````
+</div>
+
+
+<div id="update-username">
+<br/><br/>
+
+### Update username
+
+<center>
+<img src="github/update_username.gif" style="width: 100%; margin: auto;">
+</center>
+
+<h4>Information</h4>
+
+| Property  |  Description
+|--- |--- 
+| Endpoint | /auth/set-username/:user_id
+| Method | POST
+| Header | Authorization 
+| JSON body | username \| confirm_username
+
+<br>
+
+<h4>Valid data</h4>
+
+``App\Controllers\Api\Auth\AuthController`` in ``setUsername`` method and in the``$rules`` variable.
+
+| Property  |  rules
+|--- |--- 
+| username | required \| is_unique[users.username] \| max_length[30] \| min_length[3]
+| confirm_username | required \| matches[username] 
 
 <br>
 <p>Successfully response.</p>
@@ -385,8 +446,6 @@ I developed an auth template for frontend that consuming this API | [Auth System
 
 ## :white_check_mark: To do 
 - :black_square_button: update user info like:
-    - :white_check_mark:email 
-    - username 
     - password
 
 - :black_square_button: delete user

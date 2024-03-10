@@ -5,7 +5,6 @@ namespace App\Controllers\Api\Auth;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\Shield\Entities\User;
-use CodeIgniter\Shield\Models\UserModel;
 
 class AuthController extends ResourceController
 {
@@ -33,7 +32,7 @@ class AuthController extends ResourceController
             ];
 
             $rules = [
-                "username" => 'required|is_unique[users.username]',
+                "username" => 'required|is_unique[users.username]|max_length[30]|min_length[3]',
                 "email" => 'required|valid_email|is_unique[auth_identities.secret]',
                 "password" => 'required|min_length[5]|max_length[15]',
             ];
@@ -99,17 +98,19 @@ class AuthController extends ResourceController
             $attempt = auth()->attempt($credentials);
 
             if (!$attempt->isOK()) {
-                return $this->respond(["message" => 'user not found']);
+                return $this->respond(["message" => "user not found"]);
             }
-            $model = new UserModel();
 
-            $user = $model->findById(auth()->id());
+            //use CodeIgniter\Shield\Models\UserModel;
+            $users = auth()->getProvider();
 
-            $tokenData = $user->generateAccessToken('token');
+            $user = $users->findById(auth()->id());
+
+            $tokenData = $user->generateAccessToken("token");
 
             $token = $tokenData->raw_token;
 
-            return $this->respondCreated(['token' => $token]);
+            return $this->respondCreated(["token" => $token]);
 
         } catch (\Exception $e) {
             return $this->failServerError("Não foi possivel se conectar ao servidor.");
@@ -127,7 +128,9 @@ class AuthController extends ResourceController
         try {
             $id = auth()->id();
 
-            $user = $this->model
+            $users = auth()->getProvider();
+
+            $user = $users
                 ->select("users.id, users.username, auth_identities.secret as email")
                 ->join("auth_identities", "users.id = auth_identities.user_id")
                 ->findById($id);
@@ -176,7 +179,7 @@ class AuthController extends ResourceController
             if (!$this->validateData($user, $rules)) {
                 return $this->respond($this->validator->getErrors());
             }
-
+            //use CodeIgniter\Shield\Models\UserModel;
             $users = auth()->getProvider();
 
             $user = $users->findById($id);
@@ -191,6 +194,59 @@ class AuthController extends ResourceController
 
             $user->fill([
                 'email' => $email,
+            ]);
+
+            if ($users->save($user)) {
+                return $this->respondCreated();
+            }
+
+            return $this->respond(["message" => "Something goes wrong."]);
+
+        } catch (\Exception $e) {
+            return $this->failServerError("Não foi possivel se conectar ao servidor.");
+        }
+    }
+
+    /**
+     * Add or update a model resource, from "posted" properties
+     *
+     * @return ResponseInterface
+     */
+    public function setUsername($id)
+    {
+        try {
+            //remove whitespace
+            $username = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("username")));
+            $confirm_username = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("confirm_username")));
+
+            $user = [
+                "username" => $username,
+                "confirm_username" => $confirm_username,
+            ];
+
+            $rules = [
+                "username" => "required|is_unique[users.username]|max_length[30]|min_length[3]",
+                "confirm_username" => 'required|matches[username]'
+            ];
+
+            if (!$this->validateData($user, $rules)) {
+                return $this->respond($this->validator->getErrors());
+            }
+            //use CodeIgniter\Shield\Models\UserModel;
+            $users = auth()->getProvider();
+
+            $user = $users->findById($id);
+
+            if (!$user) {
+                return $this->failNotFound();
+            }
+
+            if ($user->username === $username) {
+                return $this->failValidationError();
+            }
+
+            $user->fill([
+                'username' => $username,
             ]);
 
             if ($users->save($user)) {

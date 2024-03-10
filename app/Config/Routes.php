@@ -18,8 +18,10 @@ $routes->group(
         $routes->post("login", "AuthController::login");
         $routes->get("profile", "AuthController::profile", ["filter" => "authByToken"]);
         $routes->get("logout", "AuthController::logout", ["filter" => "authByToken"]);
-        $routes->get("invalid-access", "AuthController::accessDenied");
 
         $routes->post("set-email/(:num)", "AuthController::setEmail/$1", ["filter" => "authByToken"]);
+        $routes->post("set-username/(:num)", "AuthController::setUsername/$1", ["filter" => "authByToken"]);
+
+        $routes->get("invalid-access", "AuthController::accessDenied");
     }
 );
