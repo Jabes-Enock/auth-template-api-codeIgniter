@@ -21,9 +21,10 @@ class AuthController extends ResourceController
     public function register()
     {
         try {
-            $username = $this->request->getJsonVar('username');
-            $email = $this->request->getJsonVar('email');
-            $password = $this->request->getJsonVar('password');
+
+            $username = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("username")));
+            $email = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("email")));
+            $password = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("password")));
 
             $user = [
                 "username" => $username,
@@ -68,31 +69,30 @@ class AuthController extends ResourceController
     public function login()
     {
         try {
-
             if (auth()->loggedIn()) {
                 auth()->logout();
             }
 
-            $rules = [
-                "email" => [
-                    "label" => "email",
-                    "rules" => "required|valid_email"
-                ],
-                "password" => [
-                    "label" => "password",
-                    "rules" => "required"
-                ]
+            $email = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("email")));
+            $password = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("password")));
+
+            $user = [
+                "email" => $email,
+                "password" => $password
             ];
 
-            if (!$this->validate($rules)) {
+            $rules = [
+                "email" => 'required|valid_email|',
+                "password" => 'required',
+            ];
+
+            if (!$this->validateData($user, $rules)) {
                 return $this->respond($this->validator->getErrors());
             }
 
-            $user = $this->request->getJSON();
-
             $credentials = [
-                "email" => $user->email,
-                "password" => $user->password,
+                "email" => $email,
+                "password" => $password,
             ];
 
             $attempt = auth()->attempt($credentials);
@@ -101,10 +101,7 @@ class AuthController extends ResourceController
                 return $this->respond(["message" => "user not found"]);
             }
 
-            //use CodeIgniter\Shield\Models\UserModel;
-            $users = auth()->getProvider();
-
-            $user = $users->findById(auth()->id());
+            $user = $this->getUserOr404(auth()->id());
 
             $tokenData = $user->generateAccessToken("token");
 
@@ -126,11 +123,10 @@ class AuthController extends ResourceController
     public function profile()
     {
         try {
+
             $id = auth()->id();
 
-            $users = auth()->getProvider();
-
-            $user = $users
+            $user = $this->model
                 ->select("users.id, users.username, auth_identities.secret as email")
                 ->join("auth_identities", "users.id = auth_identities.user_id")
                 ->findById($id);
@@ -163,6 +159,7 @@ class AuthController extends ResourceController
     public function setEmail($id)
     {
         try {
+
             $email = $this->request->getJsonVar('email');
             $confirm_email = $this->request->getJsonVar('confirm_email');
 
@@ -179,14 +176,8 @@ class AuthController extends ResourceController
             if (!$this->validateData($user, $rules)) {
                 return $this->respond($this->validator->getErrors());
             }
-            //use CodeIgniter\Shield\Models\UserModel;
-            $users = auth()->getProvider();
 
-            $user = $users->findById($id);
-
-            if (!$user) {
-                return $this->failNotFound();
-            }
+            $user = $this->getUserOr404($id);
 
             if ($user->getEmail() === $email) {
                 return $this->failValidationError();
@@ -196,7 +187,7 @@ class AuthController extends ResourceController
                 'email' => $email,
             ]);
 
-            if ($users->save($user)) {
+            if ($this->model->save($user)) {
                 return $this->respondCreated();
             }
 
@@ -232,14 +223,8 @@ class AuthController extends ResourceController
             if (!$this->validateData($user, $rules)) {
                 return $this->respond($this->validator->getErrors());
             }
-            //use CodeIgniter\Shield\Models\UserModel;
-            $users = auth()->getProvider();
 
-            $user = $users->findById($id);
-
-            if (!$user) {
-                return $this->failNotFound();
-            }
+            $user = $this->getUserOr404($id);
 
             if ($user->username === $username) {
                 return $this->failValidationError();
@@ -249,7 +234,8 @@ class AuthController extends ResourceController
                 'username' => $username,
             ]);
 
-            if ($users->save($user)) {
+
+            if ($this->model->save($user)) {
                 return $this->respondCreated();
             }
 
@@ -267,7 +253,7 @@ class AuthController extends ResourceController
      */
     public function delete($id = null)
     {
-        //
+
     }
 
 
@@ -277,10 +263,22 @@ class AuthController extends ResourceController
      *
      * @return ResponseInterface
      */
-    public function accessDenied($id = null)
+    public function accessDenied()
     {
         return $this->failUnauthorized();
     }
 
+    public function getUserOr404($id)
+    {
+        //use CodeIgniter\Shield\Models\UserModel;
+        $users = auth()->getProvider();
 
+        $user = $users->findById($id);
+
+        if (!$user) {
+            return $this->failNotFound();
+        }
+
+        return $user;
+    }
 }

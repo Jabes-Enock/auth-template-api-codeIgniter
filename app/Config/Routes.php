@@ -23,5 +23,6 @@ $routes->group(
         $routes->post("set-username/(:num)", "AuthController::setUsername/$1", ["filter" => "authByToken"]);
 
         $routes->get("invalid-access", "AuthController::accessDenied");
+
     }
 );
