@@ -176,10 +176,12 @@ class AuthController extends ResourceController
             if (!$this->validateData($user, $rules)) {
                 return $this->respond($this->validator->getErrors());
             }
+            // Get the User Provider (UserModel by default)
+            $users = auth()->getProvider();
 
-            $user = $this->getUserOr404($id);
+            $user = $users->findById(auth()->id());
 
-            if ($user->getEmail() === $email) {
+            if ($user->email === $email) {
                 return $this->failValidationError();
             }
 
@@ -224,7 +226,10 @@ class AuthController extends ResourceController
                 return $this->respond($this->validator->getErrors());
             }
 
-            $user = $this->getUserOr404($id);
+            // Get the User Provider (UserModel by default)
+            $users = auth()->getProvider();
+
+            $user = $users->findById(auth()->id());
 
             if ($user->username === $username) {
                 return $this->failValidationError();
@@ -253,7 +258,24 @@ class AuthController extends ResourceController
      */
     public function delete($id = null)
     {
+        try {
+            $user = $this->getUserOr404($id);
+            // Get the User Provider (UserModel by default)
+            $users = auth()->getProvider();
+            /*
+            soft delete
+            https://shield.codeigniter.com/user_management/managing_users/#deleting-users
+            */
+            $users->delete($user->id);
 
+            //delete all of the user's data from the system
+            //$users->delete($user->id, true); 
+
+            return $this->respondDeleted();
+
+        } catch (\Exception $e) {
+            return $this->failServerError("something goes wrong");
+        }
     }
 
 

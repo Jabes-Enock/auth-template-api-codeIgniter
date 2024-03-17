@@ -259,7 +259,7 @@ And now if I try to get the profile user data I get an error
 
 | Property  |  Description
 |--- |--- 
-| Endpoint | /auth/set-email/:user_id
+| Endpoint | /auth/set-email/(:num)
 | Method | POST
 | Header | Authorization 
 | JSON body | email \| confirm_email
@@ -316,7 +316,7 @@ And now if I try to get the profile user data I get an error
 
 | Property  |  Description
 |--- |--- 
-| Endpoint | /auth/set-username/:user_id
+| Endpoint | /auth/set-username/(:num)
 | Method | POST
 | Header | Authorization 
 | JSON body | username \| confirm_username
@@ -356,9 +356,36 @@ And now if I try to get the profile user data I get an error
 	"username": "The username field must contain a unique value."
 }
 ````
-<br/><br/>
 
 </div>
+
+<div id="delete-user">
+<br/><br/>
+
+### Delete user
+
+<center>
+<img src="github/delete.gif" style="width: 100%; margin: auto;">
+</center>
+
+
+<h4>Information</h4>
+
+| Property  |  Description
+|--- |--- 
+| Endpoint | /auth/delete/(:num)
+| Method | DELETE
+| Header | Authorization 
+
+<br>
+
+
+<p>Successfully response.</p>
+
+![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=200&color=GREEN&style=for-the-badge)
+
+</div>
+
 
 
 <div id="Technologies">
@@ -447,7 +474,6 @@ I developed an auth template for frontend that consuming this API | [Auth System
 - :black_square_button: update user info like:
     - password
 
-- :black_square_button: delete user
 </div>
 
 </br></br>
