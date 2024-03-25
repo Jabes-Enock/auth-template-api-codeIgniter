@@ -431,13 +431,30 @@ And now if I try to get the profile user data I get an error
     database.default.password = YOUR_pASSWORD
   ````
 
-  #### 3 - Run the migrations 
+  #### 3 - Install the dependencies
   
   ````
-    php spark migrate
+    composer install
   ````
 
-  #### 4 - Run the serve
+  #### 4 - Install Shield packages
+  
+  ````
+    composer require codeigniter4/shield
+  ````
+
+  #### 5 - Initial Setup
+  
+  ````
+    php spark shield:setup
+
+    //answer [n] for most of question.
+
+    // Answer [y] for: run migrate all?
+    //this will generated all the tables needed for authentication
+  ````
+
+  #### 6 - Run the serve
   
   ````
     php spark serve
