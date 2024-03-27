@@ -22,15 +22,7 @@ class AuthController extends ResourceController
     {
         try {
 
-            $username = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("username")));
-            $email = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("email")));
-            $password = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("password")));
-
-            $user = [
-                "username" => $username,
-                "email" => $email,
-                "password" => $password
-            ];
+            $user = $this->removeWhiteSpaces();
 
             $rules = [
                 "username" => 'required|is_unique[users.username]|max_length[30]|min_length[3]',
@@ -42,21 +34,17 @@ class AuthController extends ResourceController
                 return $this->respond($this->validator->getErrors());
             }
 
-            $userEntity = new User([
-                "username" => $username,
-                "email" => $email,
-                "password" => $password,
-            ]);
+            $userEntity = new User($user);
 
-            if ($this->model->save($userEntity)) {
-                return $this->respondCreated();
+            if (!$this->model->save($userEntity)) {
+                return $this->respond($this->model->errors());
             }
 
-            return $this->respond(["message" => "Something goes wrong."]);
+            return $this->respondCreated();
 
         } catch (\Exception $e) {
 
-            return $this->failServerError("Não foi possivel se conectar ao servidor.");
+            return $this->failServerError();
         }
     }
 
@@ -73,13 +61,7 @@ class AuthController extends ResourceController
                 auth()->logout();
             }
 
-            $email = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("email")));
-            $password = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("password")));
-
-            $user = [
-                "email" => $email,
-                "password" => $password
-            ];
+            $user = $this->removeWhiteSpaces();
 
             $rules = [
                 "email" => 'required|valid_email|',
@@ -90,12 +72,7 @@ class AuthController extends ResourceController
                 return $this->respond($this->validator->getErrors());
             }
 
-            $credentials = [
-                "email" => $email,
-                "password" => $password,
-            ];
-
-            $attempt = auth()->attempt($credentials);
+            $attempt = auth()->attempt($user);
 
             if (!$attempt->isOK()) {
                 return $this->respond(["message" => "user not found"]);
@@ -110,7 +87,7 @@ class AuthController extends ResourceController
             return $this->respondCreated(["token" => $token]);
 
         } catch (\Exception $e) {
-            return $this->failServerError("Não foi possivel se conectar ao servidor.");
+            return $this->failServerError();
         }
     }
 
@@ -134,7 +111,7 @@ class AuthController extends ResourceController
             return $this->respond($user);
 
         } catch (\Exception $e) {
-            return $this->failServerError("Não foi possivel se conectar ao servidor.");
+            return $this->failServerError();
         }
     }
 
@@ -146,6 +123,7 @@ class AuthController extends ResourceController
     public function logout()
     {
         auth()->logout();
+
         auth()->user()->revokeAllAccessTokens();
 
         return $this->respondCreated();
@@ -160,20 +138,14 @@ class AuthController extends ResourceController
     {
         try {
 
-            $email = $this->request->getJsonVar('email');
-            $confirm_email = $this->request->getJsonVar('confirm_email');
-
-            $user = [
-                "email" => $email,
-                "confirm_email" => $confirm_email,
-            ];
+            $data = $this->removeWhiteSpaces();
 
             $rules = [
                 "email" => 'required|valid_email',
-                "confirm_email" => 'required|matches[email]|valid_email'
+                "confirm_email" => 'required|matches[email]'
             ];
 
-            if (!$this->validateData($user, $rules)) {
+            if (!$this->validateData($data, $rules)) {
                 return $this->respond($this->validator->getErrors());
             }
             // Get the User Provider (UserModel by default)
@@ -181,12 +153,12 @@ class AuthController extends ResourceController
 
             $user = $users->findById(auth()->id());
 
-            if ($user->email === $email) {
+            if ($user->email === $data['email']) {
                 return $this->failValidationError();
             }
 
             $user->fill([
-                'email' => $email,
+                'email' => $data['email'],
             ]);
 
             if ($this->model->save($user)) {
@@ -196,7 +168,7 @@ class AuthController extends ResourceController
             return $this->respond(["message" => "Something goes wrong."]);
 
         } catch (\Exception $e) {
-            return $this->failServerError("Não foi possivel se conectar ao servidor.");
+            return $this->failServerError();
         }
     }
 
@@ -208,21 +180,15 @@ class AuthController extends ResourceController
     public function setUsername($id)
     {
         try {
-            //remove whitespace
-            $username = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("username")));
-            $confirm_username = trim(preg_replace("/\s+/", " ", $this->request->getJsonVar("confirm_username")));
 
-            $user = [
-                "username" => $username,
-                "confirm_username" => $confirm_username,
-            ];
+            $data = $this->removeWhiteSpaces();
 
             $rules = [
                 "username" => "required|is_unique[users.username]|max_length[30]|min_length[3]",
                 "confirm_username" => 'required|matches[username]'
             ];
 
-            if (!$this->validateData($user, $rules)) {
+            if (!$this->validateData($data, $rules)) {
                 return $this->respond($this->validator->getErrors());
             }
 
@@ -231,23 +197,22 @@ class AuthController extends ResourceController
 
             $user = $users->findById(auth()->id());
 
-            if ($user->username === $username) {
+            if ($user->username === $data['username']) {
                 return $this->failValidationError();
             }
 
             $user->fill([
-                'username' => $username,
+                'username' => $data['username'],
             ]);
 
-
-            if ($this->model->save($user)) {
-                return $this->respondCreated();
+            if (!$this->model->save($user)) {
+                return $this->respond($this->model->errors());
             }
 
-            return $this->respond(["message" => "Something goes wrong."]);
+            return $this->respondCreated();
 
         } catch (\Exception $e) {
-            return $this->failServerError("Não foi possivel se conectar ao servidor.");
+            return $this->failServerError();
         }
     }
 
@@ -303,4 +268,16 @@ class AuthController extends ResourceController
 
         return $user;
     }
+
+    public function removeWhiteSpaces(): array
+    {
+        $data = $this->request->getJson(true);
+
+        $cleanData = array_map(function ($item) {
+            return trim(preg_replace("/\s+/", " ", $item));
+        }, $data);
+
+        return $cleanData;
+    }
+
 }
